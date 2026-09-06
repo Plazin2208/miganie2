@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Система пробуждения: Оранж/Синий + Настройка камеры</title>
+<title>Система пробуждения: Полный комплекс</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -25,7 +25,7 @@
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 900px;
+    max-width: 950px;
     width: 100%;
   }
 
@@ -35,30 +35,24 @@
     border-radius: 12px;
     padding: 20px;
     flex: 1;
-    min-width: 280px;
+    min-width: 300px;
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
 
-  /* Настройки камеры */
+  /* Панель настройки камеры (Холодный / Теплый) */
   .camera-settings {
     background: #21262d;
     border: 1px solid #444c56;
-    padding: 12px;
+    padding: 10px 12px;
     border-radius: 8px;
-    margin-bottom: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    margin-bottom: 5px;
   }
-
-  .camera-settings label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #58a6ff;
-  }
-
+  .camera-settings label { font-size: 12px; font-weight: 600; color: #58a6ff; }
   .camera-settings select {
     background: #0d1117;
     color: #c9d1d9;
@@ -68,6 +62,21 @@
     outline: none;
     cursor: pointer;
   }
+
+  /* Чекбокс тихого режима */
+  .silent-box {
+    background: #21262d;
+    border: 1px solid #444c56;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-bottom: 5px;
+  }
+  .silent-box input { cursor: pointer; width: 16px; height: 16px; }
 
   button {
     background: #21262d;
@@ -97,6 +106,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: transform 0.05s;
+  }
+
+  /* Тряска на ПК для имитации вибрации */
+  .shake { animation: shakeAnim 0.1s infinite; }
+  @keyframes shakeAnim {
+    0% { transform: translate(2px, 2px); }
+    50% { transform: translate(-2px, -2px); }
+    100% { transform: translate(0, 0); }
   }
 
   .lamps-wrapper {
@@ -120,7 +138,7 @@
     background: #000;
     border: 2px solid #30363d;
     margin-bottom: 8px;
-    transition: background-color 0.1s, box-shadow 0.1s;
+    transition: background-color 0.05s, box-shadow 0.05s;
   }
 
   .info-card {
@@ -136,192 +154,306 @@
 </head>
 <body>
 
-<h1>Система пробуждения водителя</h1>
-<p class="subtitle">Исправленный авто-цикл + Выбор температуры света камеры</p>
+<h1>Система пробуждения: Итоговая сборка</h1>
+<p class="subtitle">Смена света камеры + Оранж/Синий сигнал + Вибрация в такт + Звук + Silent Mode</p>
 
 <div class="container">
   <div class="controls-panel">
     
-    <!-- Блок настроек камеры -->
+    <!-- Переключатель температуры света камеры -->
     <div class="camera-settings">
       <label for="camColor">Цвет постоянной подсветки (Камера):</label>
       <select id="camColor" onchange="updateCameraLight()">
-        <option value="cool">Холодный белый (6000K - Макс. контраст)</option>
-        <option value="warm">Теплый белый (3000K - Мягкий свет)</option>
+        <option value="cool">Холодный белый (6000K)</option>
+        <option value="warm">Теплый белый (3000K)</option>
       </select>
     </div>
 
-    <!-- Кнопки режимов -->
-    <button id="btn1" onclick="startMode(1)">1. Сигнал внимания (1.0 Гц | Оранжевый)</button>
-    <button id="btn2" onclick="startMode(2)">2. Долгая адаптация (1.5 Гц | Синий)</button>
-    <button id="btn3" onclick="startMode(3)">3. Долгая активная фаза (2.5 Гц | Чередование)</button>
-    <button id="btn4" onclick="startMode(4)">4. Экстренный вызов (Контрастный строб)</button>
-    <button id="btn5" class="auto-btn" onclick="startMode(5)">▶ Полный нарастающий цикл</button>
-    <button class="stop-btn" onclick="stopSignal()">⏹ Экстренный стоп</button>
+    <!-- Переключатель тихого режима -->
+    <label class="silent-box">
+      <input type="checkbox" id="silentModeToggle">
+      <span><b>Silent Mode</b> (Без звука на 1-2 фазах, нарастание с 3 фазы)</span>
+    </label>
+
+    <button id="btn1" onclick="startMode(1)">1. Сигнал внимания (Оранж | 1.0 Гц | 3.5с)</button>
+    <button id="btn2" onclick="startMode(2)">2. Долгая адаптация (Синий | 1.5 Гц | 8с)</button>
+    <button id="btn3" onclick="startMode(3)">3. Активная фаза (Чередование | 2.5 Гц | 8с)</button>
+    <button id="btn4" onclick="startMode(4)">4. Экстренный вызов (Строб | До стопа)</button>
+    <button id="btn5" class="auto-btn" onclick="startAutoCycle()">▶ Полный нарастающий цикл</button>
+    <button class="stop-btn" onclick="stopAll()">⏹ Экстренный стоп</button>
   </div>
 
-  <div class="display-panel">
+  <div id="displayPanel" class="display-panel">
     <div class="lamps-wrapper">
       <div class="lamp-box">
         <div id="camLamp" class="lamp"></div>
-        <span id="camLabel">Камера (Холодный свет)</span>
+        <span id="camLabel">Камера (Холодный)</span>
       </div>
       <div class="lamp-box">
         <div id="signalLamp" class="lamp"></div>
-        <span>Сигнальный фонарь</span>
+        <span>Сигнал</span>
       </div>
     </div>
     
     <div class="info-card">
-      <div><strong>Статус сигнала:</strong> <span id="status">Дежурный режим</span></div>
-      <div><strong>Текущий цвет вспышки:</strong> <span id="colorName">Выкл</span></div>
-      <div><strong>Частота:</strong> <span id="freq">0 Гц</span></div>
+      <div><strong>Фаза:</strong> <span id="status">Дежурный режим</span></div>
+      <div><strong>Обратный отсчет:</strong> <span id="countdown">-</span></div>
+      <div><strong>Параметры:</strong> <span id="details">Выкл</span></div>
+      <div><strong>Отклик (Вибро/Звук):</strong> <span id="feedbackStatus">Отключено</span></div>
     </div>
   </div>
 </div>
 
 <script>
-  // Разделяем таймеры, чтобы они не перебивали друг друга
-  let blinkTimer = null; // Для мигания (setInterval)
-  let cycleTimer = null; // Для авто-переключения этапов (setTimeout)
+  let blinkTimer = null;
+  let countdownTimer = null;
+  let phaseTimeout = null;
+  let audioCtx = null;
 
   const camLamp = document.getElementById('camLamp');
   const signalLamp = document.getElementById('signalLamp');
+  const displayPanel = document.getElementById('displayPanel');
   const statusEl = document.getElementById('status');
-  const colorNameEl = document.getElementById('colorName');
-  const freqEl = document.getElementById('freq');
+  const countdownEl = document.getElementById('countdown');
+  const detailsEl = document.getElementById('details');
+  const feedbackStatusEl = document.getElementById('feedbackStatus');
+  const silentToggle = document.getElementById('silentModeToggle');
   const camLabel = document.getElementById('camLabel');
 
-  // Функция обновления света камеры (Теплый / Холодный)
+  // Управление цветом камеры (Холодный / Теплый)
   function updateCameraLight() {
-    const camMode = document.getElementById('camColor').value;
-    
-    if (camMode === 'warm') {
-      // Теплый свет (желтоватый, 3000K)
+    const mode = document.getElementById('camColor').value;
+    if (mode === 'warm') {
       camLamp.style.backgroundColor = 'rgb(255, 214, 170)';
       camLamp.style.boxShadow = '0 0 35px rgba(255, 214, 170, 0.8)';
-      camLabel.textContent = 'Камера (Теплый свет)';
+      camLabel.textContent = 'Камера (Теплый)';
     } else {
-      // Холодный свет (синевато-белый, 6000K)
       camLamp.style.backgroundColor = 'rgb(240, 245, 255)';
       camLamp.style.boxShadow = '0 0 35px rgba(240, 245, 255, 0.9)';
-      camLabel.textContent = 'Камера (Холодный свет)';
+      camLabel.textContent = 'Камера (Холодный)';
     }
   }
 
-  // Управление сигнальным фонарём (Оранжевый / Синий)
+  // Генерация звука
+  function playBeep(volume = 0.1, frequency = 600) {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    try {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.value = frequency;
+      
+      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e) {}
+  }
+
+  // Вибрация (телефон + ПК тряска)
+  function triggerVibration(duration, heavy = false) {
+    if ("vibrate" in navigator) {
+      navigator.vibrate(duration);
+    }
+    if (heavy) {
+      displayPanel.classList.add('shake');
+      setTimeout(() => displayPanel.classList.remove('shake'), duration);
+    }
+  }
+
+  // Цвет сигнала
   function setSignalColor(colorType, brightness) {
     if (colorType === 'off' || brightness === 0) {
       signalLamp.style.backgroundColor = '#000';
       signalLamp.style.boxShadow = 'none';
-      colorNameEl.textContent = 'Выкл';
       return;
     }
-
     if (colorType === 'orange') {
       const r = Math.floor(255 * brightness);
       const g = Math.floor(140 * brightness);
       signalLamp.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
       signalLamp.style.boxShadow = `0 0 ${brightness * 35}px rgba(255, 140, 0, ${brightness})`;
-      colorNameEl.textContent = 'Оранжевый (Контраст)';
-    } 
-    else if (colorType === 'blue') {
+    } else if (colorType === 'blue') {
       const b = Math.floor(255 * brightness);
       const g = Math.floor(100 * brightness);
       signalLamp.style.backgroundColor = `rgb(0, ${g}, ${b})`;
       signalLamp.style.boxShadow = `0 0 ${brightness * 35}px rgba(0, 100, 255, ${brightness})`;
-      colorNameEl.textContent = 'Синий (Подавление мелатонина)';
     }
   }
 
-  function clearButtons() {
+  function clearAllTimers() {
+    clearInterval(blinkTimer);
+    clearTimeout(phaseTimeout);
+    clearInterval(countdownTimer);
+    displayPanel.classList.remove('shake');
+  }
+
+  function stopAll() {
+    clearAllTimers();
+    setSignalColor('off', 0);
+    statusEl.textContent = 'Дежурный режим';
+    countdownEl.textContent = '-';
+    detailsEl.textContent = 'Выкл';
+    feedbackStatusEl.textContent = 'Отключено';
     document.querySelectorAll('.controls-panel button').forEach(b => b.classList.remove('active'));
   }
 
-  // Полная остановка всех таймеров
-  function stopSignal() {
-    clearInterval(blinkTimer); // Убиваем мигалку
-    clearTimeout(cycleTimer);  // Убиваем планировщик этапов
-    setSignalColor('off', 0);
-    statusEl.textContent = 'Дежурный режим';
-    freqEl.textContent = '0 Гц';
-    clearButtons();
-  }
-
-  function startMode(modeNum) {
-    stopSignal(); // Сбрасываем всё перед запуском нового режима
-    clearButtons();
+  // Логика фаз
+  function runPhase(modeNum, onComplete) {
+    clearAllTimers();
+    
+    let durationSec = 0;
+    let statusText = '';
+    const isSilent = silentToggle.checked;
 
     if (modeNum === 1) {
-      document.getElementById('btn1').classList.add('active');
-      statusEl.textContent = '1. Сигнал внимания (3.5 сек)';
-      freqEl.textContent = '1.0 Гц';
+      durationSec = 3.5;
+      statusText = '1. Сигнал внимания';
+      detailsEl.textContent = 'Оранжевый (80%) | 1.0 Гц (Без звука)';
+      
       let state = false;
       blinkTimer = setInterval(() => {
         state = !state;
-        setSignalColor(state ? 'orange' : 'off', state ? 0.8 : 0);
+        if (state) {
+          setSignalColor('orange', 0.8);
+          triggerVibration(200, false);
+          feedbackStatusEl.textContent = 'Вибрация такт (Слабая)';
+        } else {
+          setSignalColor('off', 0);
+          feedbackStatusEl.textContent = 'Пауза';
+        }
       }, 500);
-    } 
+    }
     else if (modeNum === 2) {
-      document.getElementById('btn2').classList.add('active');
-      statusEl.textContent = '2. Долгая адаптация (8 сек)';
-      freqEl.textContent = '1.5 Гц';
+      durationSec = 8;
+      statusText = '2. Долгая адаптация';
+      detailsEl.textContent = 'Синий (100%) | 1.5 Гц' + (isSilent ? ' (Silent Mode)' : '');
+      
       let state = false;
       blinkTimer = setInterval(() => {
         state = !state;
-        setSignalColor(state ? 'blue' : 'off', state ? 1.0 : 0);
+        if (state) {
+          setSignalColor('blue', 1.0);
+          triggerVibration(200, false);
+          
+          if (!isSilent) {
+            playBeep(0.05, 500);
+            feedbackStatusEl.textContent = 'Вибрация + Тихий звук';
+          } else {
+            feedbackStatusEl.textContent = 'Вибрация (Silent Mode)';
+          }
+        } else {
+          setSignalColor('off', 0);
+          feedbackStatusEl.textContent = 'Пауза';
+        }
       }, 333);
     }
     else if (modeNum === 3) {
-      document.getElementById('btn3').classList.add('active');
-      statusEl.textContent = '3. Долгая активная фаза (8 сек)';
-      freqEl.textContent = '2.5 Гц';
+      durationSec = 8;
+      statusText = '3. Активная фаза (Нарастание)';
+      detailsEl.textContent = 'Оранж/Синий (100%) | 2.5 Гц';
+      
       let state = false;
+      let soundCounter = 0;
       blinkTimer = setInterval(() => {
         state = !state;
-        setSignalColor(state ? 'orange' : 'blue', 1.0);
+        soundCounter++;
+        
+        if (state) {
+          setSignalColor('orange', 1.0);
+          triggerVibration(150, true);
+        } else {
+          setSignalColor('blue', 1.0);
+          triggerVibration(150, true);
+        }
+
+        // Нарастание звука с 3 фазы
+        let volume = isSilent ? 0.02 + (soundCounter * 0.004) : 0.2;
+        if (volume > 0.2) volume = 0.2;
+        
+        playBeep(isSilent ? Math.min(volume, 0.08) : 0.2, 800);
+        feedbackStatusEl.textContent = `Сильная вибро + Нарастающий звук`;
       }, 200);
-    } 
+    }
     else if (modeNum === 4) {
-      document.getElementById('btn4').classList.add('active');
-      statusEl.textContent = '4. Экстренный вызов';
-      freqEl.textContent = 'Контрастные строб-импульсы';
+      statusText = '4. Экстренный вызов';
+      detailsEl.textContent = 'Строб (Оранж x2 / Синий x2)';
+      
       let step = 0;
       blinkTimer = setInterval(() => {
-        if (step === 0 || step === 2) setSignalColor('orange', 1.0);
-        else if (step === 4 || step === 6) setSignalColor('blue', 1.0);
-        else setSignalColor('off', 0);
+        if (step === 0 || step === 2) {
+          setSignalColor('orange', 1.0);
+          triggerVibration(80, true);
+        } else if (step === 4 || step === 6) {
+          setSignalColor('blue', 1.0);
+          triggerVibration(80, true);
+        } else {
+          setSignalColor('off', 0);
+        }
+        
+        playBeep(0.3, 1000);
+        feedbackStatusEl.textContent = 'Макс. вибро + МАКС. звук';
         step = (step + 1) % 8;
       }, 100);
+      return;
     }
-    else if (modeNum === 5) {
-      document.getElementById('btn5').classList.add('active');
-      
-      // Этап 1
-      startMode(1);
-      document.getElementById('btn5').classList.add('active'); // Возвращаем подсветку кнопке 5
-      
-      cycleTimer = setTimeout(() => {
-        // Этап 2
-        startMode(2);
-        document.getElementById('btn5').classList.add('active');
-        
-        cycleTimer = setTimeout(() => {
-          // Этап 3
-          startMode(3);
-          document.getElementById('btn5').classList.add('active');
-          
-          cycleTimer = setTimeout(() => {
-            // Этап 4
-            startMode(4);
-            document.getElementById('btn5').classList.add('active');
-          }, 8000); 
-        }, 8000); 
-      }, 3500); 
-    }
+
+    statusEl.textContent = statusText;
+    let timeLeft = durationSec;
+    countdownEl.textContent = timeLeft.toFixed(1) + ' сек';
+    
+    countdownTimer = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        clearInterval(countdownTimer);
+        countdownEl.textContent = '0.0 сек';
+      } else {
+        countdownEl.textContent = timeLeft.toFixed(1) + ' сек';
+      }
+    }, 100);
+
+    phaseTimeout = setTimeout(() => {
+      if (onComplete) onComplete();
+    }, durationSec * 1000);
   }
 
-  // Инициализация камеры при загрузке
+  function startMode(modeNum) {
+    stopAll();
+    document.getElementById('btn' + modeNum).classList.add('active');
+    runPhase(modeNum, null);
+  }
+
+  function startAutoCycle() {
+    stopAll();
+    document.getElementById('btn5').classList.add('active');
+    
+    runPhase(1, () => {
+      document.getElementById('btn1').classList.remove('active');
+      document.getElementById('btn2').classList.add('active');
+      runPhase(2, () => {
+        document.getElementById('btn2').classList.remove('active');
+        document.getElementById('btn3').classList.add('active');
+        runPhase(3, () => {
+          document.getElementById('btn3').classList.remove('active');
+          document.getElementById('btn4').classList.add('active');
+          runPhase(4, null);
+        });
+      });
+    });
+  }
+
+  // Запуск при открытии страницы
   updateCameraLight();
 </script>
 
