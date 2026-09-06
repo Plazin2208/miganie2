@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Система пробуждения: Оранж/Синий + Настройка камеры</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+  }
+  
+  h1 { color: #58a6ff; margin-bottom: 5px; font-size: 22px; text-align: center; }
+  p.subtitle { color: #8b949e; margin-top: 0; margin-bottom: 25px; font-size: 14px; text-align: center; }
+
+  .container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .controls-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Настройки камеры */
+  .camera-settings {
+    background: #21262d;
+    border: 1px solid #444c56;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .camera-settings label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #58a6ff;
+  }
+
+  .camera-settings select {
+    background: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    padding: 8px;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  button {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  button:hover { background: #30363d; }
+  button.active { background: #1f6feb; color: #fff; font-weight: bold; }
+  button.auto-btn { background: #238636; border-color: #2ea043; color: #fff; font-weight: bold; }
+  button.stop-btn { background: #da3633; border-color: #f85149; color: #fff; text-align: center; justify-content: center; }
+
+  .display-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lamps-wrapper {
+    display: flex;
+    gap: 30px;
+    margin: 20px 0;
+  }
+
+  .lamp-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: #8b949e;
+  }
+
+  .lamp {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #000;
+    border: 2px solid #30363d;
+    margin-bottom: 8px;
+    transition: background-color 0.1s, box-shadow 0.1s;
+  }
+
+  .info-card {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<h1>Система пробуждения водителя</h1>
+<p class="subtitle">Исправленный авто-цикл + Выбор температуры света камеры</p>
+
+<div class="container">
+  <div class="controls-panel">
+    
+    <!-- Блок настроек камеры -->
+    <div class="camera-settings">
+      <label for="camColor">Цвет постоянной подсветки (Камера):</label>
+      <select id="camColor" onchange="updateCameraLight()">
+        <option value="cool">Холодный белый (6000K - Макс. контраст)</option>
+        <option value="warm">Теплый белый (3000K - Мягкий свет)</option>
+      </select>
+    </div>
+
+    <!-- Кнопки режимов -->
+    <button id="btn1" onclick="startMode(1)">1. Сигнал внимания (1.0 Гц | Оранжевый)</button>
+    <button id="btn2" onclick="startMode(2)">2. Долгая адаптация (1.5 Гц | Синий)</button>
+    <button id="btn3" onclick="startMode(3)">3. Долгая активная фаза (2.5 Гц | Чередование)</button>
+    <button id="btn4" onclick="startMode(4)">4. Экстренный вызов (Контрастный строб)</button>
+    <button id="btn5" class="auto-btn" onclick="startMode(5)">▶ Полный нарастающий цикл</button>
+    <button class="stop-btn" onclick="stopSignal()">⏹ Экстренный стоп</button>
+  </div>
+
+  <div class="display-panel">
+    <div class="lamps-wrapper">
+      <div class="lamp-box">
+        <div id="camLamp" class="lamp"></div>
+        <span id="camLabel">Камера (Холодный свет)</span>
+      </div>
+      <div class="lamp-box">
+        <div id="signalLamp" class="lamp"></div>
+        <span>Сигнальный фонарь</span>
+      </div>
+    </div>
+    
+    <div class="info-card">
+      <div><strong>Статус сигнала:</strong> <span id="status">Дежурный режим</span></div>
+      <div><strong>Текущий цвет вспышки:</strong> <span id="colorName">Выкл</span></div>
+      <div><strong>Частота:</strong> <span id="freq">0 Гц</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Разделяем таймеры, чтобы они не перебивали друг друга
+  let blinkTimer = null; // Для мигания (setInterval)
+  let cycleTimer = null; // Для авто-переключения этапов (setTimeout)
+
+  const camLamp = document.getElementById('camLamp');
+  const signalLamp = document.getElementById('signalLamp');
+  const statusEl = document.getElementById('status');
+  const colorNameEl = document.getElementById('colorName');
+  const freqEl = document.getElementById('freq');
+  const camLabel = document.getElementById('camLabel');
+
+  // Функция обновления света камеры (Теплый / Холодный)
+  function updateCameraLight() {
+    const camMode = document.getElementById('camColor').value;
+    
+    if (camMode === 'warm') {
+      // Теплый свет (желтоватый, 3000K)
+      camLamp.style.backgroundColor = 'rgb(255, 214, 170)';
+      camLamp.style.boxShadow = '0 0 35px rgba(255, 214, 170, 0.8)';
+      camLabel.textContent = 'Камера (Теплый свет)';
+    } else {
+      // Холодный свет (синевато-белый, 6000K)
+      camLamp.style.backgroundColor = 'rgb(240, 245, 255)';
+      camLamp.style.boxShadow = '0 0 35px rgba(240, 245, 255, 0.9)';
+      camLabel.textContent = 'Камера (Холодный свет)';
+    }
+  }
+
+  // Управление сигнальным фонарём (Оранжевый / Синий)
+  function setSignalColor(colorType, brightness) {
+    if (colorType === 'off' || brightness === 0) {
+      signalLamp.style.backgroundColor = '#000';
+      signalLamp.style.boxShadow = 'none';
+      colorNameEl.textContent = 'Выкл';
+      return;
+    }
+
+    if (colorType === 'orange') {
+      const r = Math.floor(255 * brightness);
+      const g = Math.floor(140 * brightness);
+      signalLamp.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
+      signalLamp.style.boxShadow = `0 0 ${brightness * 35}px rgba(255, 140, 0, ${brightness})`;
+      colorNameEl.textContent = 'Оранжевый (Контраст)';
+    } 
+    else if (colorType === 'blue') {
+      const b = Math.floor(255 * brightness);
+      const g = Math.floor(100 * brightness);
+      signalLamp.style.backgroundColor = `rgb(0, ${g}, ${b})`;
+      signalLamp.style.boxShadow = `0 0 ${brightness * 35}px rgba(0, 100, 255, ${brightness})`;
+      colorNameEl.textContent = 'Синий (Подавление мелатонина)';
+    }
+  }
+
+  function clearButtons() {
+    document.querySelectorAll('.controls-panel button').forEach(b => b.classList.remove('active'));
+  }
+
+  // Полная остановка всех таймеров
+  function stopSignal() {
+    clearInterval(blinkTimer); // Убиваем мигалку
+    clearTimeout(cycleTimer);  // Убиваем планировщик этапов
+    setSignalColor('off', 0);
+    statusEl.textContent = 'Дежурный режим';
+    freqEl.textContent = '0 Гц';
+    clearButtons();
+  }
+
+  function startMode(modeNum) {
+    stopSignal(); // Сбрасываем всё перед запуском нового режима
+    clearButtons();
+
+    if (modeNum === 1) {
+      document.getElementById('btn1').classList.add('active');
+      statusEl.textContent = '1. Сигнал внимания (3.5 сек)';
+      freqEl.textContent = '1.0 Гц';
+      let state = false;
+      blinkTimer = setInterval(() => {
+        state = !state;
+        setSignalColor(state ? 'orange' : 'off', state ? 0.8 : 0);
+      }, 500);
+    } 
+    else if (modeNum === 2) {
+      document.getElementById('btn2').classList.add('active');
+      statusEl.textContent = '2. Долгая адаптация (8 сек)';
+      freqEl.textContent = '1.5 Гц';
+      let state = false;
+      blinkTimer = setInterval(() => {
+        state = !state;
+        setSignalColor(state ? 'blue' : 'off', state ? 1.0 : 0);
+      }, 333);
+    }
+    else if (modeNum === 3) {
+      document.getElementById('btn3').classList.add('active');
+      statusEl.textContent = '3. Долгая активная фаза (8 сек)';
+      freqEl.textContent = '2.5 Гц';
+      let state = false;
+      blinkTimer = setInterval(() => {
+        state = !state;
+        setSignalColor(state ? 'orange' : 'blue', 1.0);
+      }, 200);
+    } 
+    else if (modeNum === 4) {
+      document.getElementById('btn4').classList.add('active');
+      statusEl.textContent = '4. Экстренный вызов';
+      freqEl.textContent = 'Контрастные строб-импульсы';
+      let step = 0;
+      blinkTimer = setInterval(() => {
+        if (step === 0 || step === 2) setSignalColor('orange', 1.0);
+        else if (step === 4 || step === 6) setSignalColor('blue', 1.0);
+        else setSignalColor('off', 0);
+        step = (step + 1) % 8;
+      }, 100);
+    }
+    else if (modeNum === 5) {
+      document.getElementById('btn5').classList.add('active');
+      
+      // Этап 1
+      startMode(1);
+      document.getElementById('btn5').classList.add('active'); // Возвращаем подсветку кнопке 5
+      
+      cycleTimer = setTimeout(() => {
+        // Этап 2
+        startMode(2);
+        document.getElementById('btn5').classList.add('active');
+        
+        cycleTimer = setTimeout(() => {
+          // Этап 3
+          startMode(3);
+          document.getElementById('btn5').classList.add('active');
+          
+          cycleTimer = setTimeout(() => {
+            // Этап 4
+            startMode(4);
+            document.getElementById('btn5').classList.add('active');
+          }, 8000); 
+        }, 8000); 
+      }, 3500); 
+    }
+  }
+
+  // Инициализация камеры при загрузке
+  updateCameraLight();
+</script>
+
+</body>
+</html>
